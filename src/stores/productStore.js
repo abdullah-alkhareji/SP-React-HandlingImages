@@ -2,54 +2,68 @@ import { makeAutoObservable } from "mobx";
 import instance from "./instance";
 
 class ProductStore {
-  constructor() {
-    makeAutoObservable(this);
-    // this will turn our class into a mobx store and all components can observe the changes that happen in the store
-  }
-  products = [];
+	constructor() {
+		makeAutoObservable(this);
+		// this will turn our class into a mobx store and all components can observe the changes that happen in the store
+	}
+	products = [];
 
-  createProduct = async (newProduct) => {
-    try {
-      const response = await instance.post("/products", newProduct);
-      this.products.push(response.data);
-    } catch (error) {
-      console.log(
-        "🚀 ~ file: productStore.js ~ line 16 ~ ProductStore ~ createProduct= ~ error",
-        error
-      );
-    }
-  };
+	createProduct = async newProduct => {
+		try {
+			const formData = new FormData();
+			formData.append("name", newProduct.name);
+			formData.append("description", newProduct.description);
+			formData.append("color", newProduct.color);
+			formData.append("quantity", newProduct.quantity);
+			formData.append("price", newProduct.price);
+			formData.append("image", newProduct.image, newProduct.image.name);
+			const response = await instance.post("/products", formData);
+			this.products.push(response.data);
+		} catch (error) {
+			console.log(
+				"🚀 ~ file: productStore.js ~ line 16 ~ ProductStore ~ createProduct= ~ error",
+				error
+			);
+		}
+	};
 
-  fetchProducts = async () => {
-    try {
-      const response = await instance.get("/products");
-      this.products = response.data;
-    } catch (error) {
-      console.log("ProductStore -> fetchProducts -> error", error);
-    }
-  };
+	fetchProducts = async () => {
+		try {
+			const response = await instance.get("/products");
+			this.products = response.data;
+		} catch (error) {
+			console.log("ProductStore -> fetchProducts -> error", error);
+		}
+	};
 
-  updateProduct = async (updatedProduct, productId) => {
-    try {
-      const res = await instance.put(`/products/${productId}`, updatedProduct);
-      this.products = this.products.map((product) =>
-        product._id === productId ? res.data : product
-      );
-    } catch (error) {
-      console.log("ProductStore -> updateProduct -> error", error);
-    }
-  };
+	updateProduct = async (updatedProduct, productId) => {
+		try {
+			const formData = new FormData();
+			formData.append("name", updatedProduct.name);
+			formData.append("description", updatedProduct.description);
+			formData.append("color", updatedProduct.color);
+			formData.append("quantity", updatedProduct.quantity);
+			formData.append("price", updatedProduct.price);
+			formData.append("image", updatedProduct.image, updatedProduct.image.name);
+			const res = await instance.put(`/products/${productId}`, formData);
+			this.products = this.products.map(product =>
+				product._id === productId ? res.data : product
+			);
+		} catch (error) {
+			console.log("ProductStore -> updateProduct -> error", error);
+		}
+	};
 
-  deleteProduct = async (productId) => {
-    try {
-      await instance.delete(`/products/${productId}`);
-      this.products = this.products.filter(
-        (product) => product._id !== productId
-      );
-    } catch (error) {
-      console.log("ProductStore -> deleteProduct -> error", error);
-    }
-  };
+	deleteProduct = async productId => {
+		try {
+			await instance.delete(`/products/${productId}`);
+			this.products = this.products.filter(
+				product => product._id !== productId
+			);
+		} catch (error) {
+			console.log("ProductStore -> deleteProduct -> error", error);
+		}
+	};
 }
 
 const productStore = new ProductStore();
